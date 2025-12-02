@@ -1,11 +1,3 @@
-# kis_client.py
-import json
-import requests
-from datetime import datetime
-from stock_config import APP_KEY, APP_SECRET, BASE_URL, TR_ID_PRICE
-
-
-# kis_client.py
 import json
 import requests
 from datetime import datetime
@@ -21,7 +13,7 @@ def get_access_token() -> str:
         "appsecret": APP_SECRET,
     }
 
-    # 🔍 디버깅용 출력
+    # 디버깅용 출력
     print("=== [DEBUG] get_access_token 시작 ===")
     print(f"[DEBUG] URL: {url}")
     print(f"[DEBUG] APP_KEY: {APP_KEY}")
@@ -35,7 +27,7 @@ def get_access_token() -> str:
     except Exception:
         print("[DEBUG] response text 출력 중 에러")
 
-    # 여기서 바로 raise_for_status() 하지 말고, 에러 내용을 그대로 보여주자
+    # 에러 체크
     if res.status_code != 200:
         raise RuntimeError(
             f"토큰 발급 실패: status={res.status_code}, body={res.text}"
@@ -47,7 +39,7 @@ def get_access_token() -> str:
     if not access_token:
         raise RuntimeError(f"토큰 키(access_token)를 응답에서 찾지 못했습니다: {data}")
 
-    print("🔑 ACCESS_TOKEN 발급 완료")
+    print("ACCESS_TOKEN 발급 완료")
     return access_token
 
 

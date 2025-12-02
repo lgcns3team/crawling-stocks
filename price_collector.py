@@ -1,4 +1,3 @@
-# price_collector.py
 import time
 from datetime import datetime
 
@@ -78,7 +77,7 @@ def run_loop():
 
 
 def main():
-    print("📥 1분봉 수집 시작")
+    print("1분봉 수집 시작")
 
     conn = get_connection()
     try:

@@ -1,13 +1,15 @@
-# stock_config.py
 import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ================================
 # KIS API 설정
 # ================================
-APP_KEY = os.getenv("KIS_APP_KEY", "YOUR_APP_KEY_HERE")
-APP_SECRET = os.getenv("KIS_APP_SECRET", "YOUR_APP_SECRET_HERE")
+APP_KEY = os.getenv("KIS_APP_KEY")
+APP_SECRET = os.getenv("KIS_APP_SECRET")
 
-# 🔥 여기: 무조건 실전으로 고정
 KIS_ENV = "real"
 
 if KIS_ENV == "real":
@@ -89,11 +91,11 @@ MAX_LOOPS = None            # 테스트용으로 숫자 넣으면 그 횟수만 
 # ================================
 # DB 설정
 # ================================
-DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
-DB_PORT = int(os.getenv("DB_PORT", "3306"))
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "ps140825!")
-DB_NAME = os.getenv("DB_NAME", "test")
+DB_HOST = os.getenv("db_host")
+DB_PORT = int(os.getenv("db_port"))
+DB_USER = os.getenv("db_user")
+DB_PASSWORD = os.getenv("db_password")
+DB_NAME = os.getenv("db_name")
 
 # 이 이름으로 테이블이 생성됨
 PRICE_TABLE_NAME = "Stocks"     # 주가 스냅샷 테이블
