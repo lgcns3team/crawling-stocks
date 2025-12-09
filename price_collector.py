@@ -15,20 +15,39 @@ from kis_client import get_access_token, fetch_price_snapshot
 
 
 def run():
-    access_token = get_access_token()
+    # 1) 우선 캐시 기반으로 토큰 확보 (없으면 발급)
+    try:
+        access_token = get_access_token(force_new=False)
+    except Exception as e:
+        print(f"[FATAL] access_token 발급 실패, 이번 회차 전체 수집 중단: {e}")
+        return
+
     conn = get_connection()
     try:
         for ticker in TARGET_TICKERS:
             kor_name = TICKER_TO_NAME.get(ticker, "")
             try:
-                # 1) KIS API에서 현재가 스냅샷 가져오기
-                raw = fetch_price_snapshot(ticker, access_token)
-                # 2) Companies에 이 종목이 존재하는지 확인
+                # 2) 첫 시도: 기존 토큰으로 조회
+                try:
+                    raw = fetch_price_snapshot(ticker, access_token)
+                except Exception as e:
+                    msg = str(e)
+                    # 토큰 문제로 보이는 경우에만 재발급 로직 태움
+                    if "status=401" in msg or "status=403" in msg or "접근토큰" in msg:
+                        print(f"[WARN] {ticker} {kor_name} 조회 중 토큰 문제 추정 → 재발급 시도")
+                        # 2-1) 강제 재발급 (1분 이내면 기존 토큰 재사용)
+                        access_token = get_access_token(force_new=True)
+                        # 2-2) 새 토큰으로 한 번 더 시도
+                        raw = fetch_price_snapshot(ticker, access_token)
+                    else:
+                        # 토큰 문제가 아니면 여기서 바로 raise 해서 아래 except로
+                        raise
+
+                # 여기까지 왔으면 raw는 정상
                 company_id = get_or_create_company(conn, ticker, kor_name)
-                # 3) Stocks 테이블로 넣을 데이터 만들기
                 snapshot = {
-                    "date": raw["date"],               # datetime 객체
-                    "company_id": company_id,          # = ticker 문자열
+                    "date": raw["date"],
+                    "company_id": company_id,
                     "stck_prpr": raw["stck_prpr"],
                     "stck_oprc": raw["stck_oprc"],
                     "stck_hgpr": raw["stck_hgpr"],
@@ -36,7 +55,7 @@ def run():
                     "acml_vol": raw["acml_vol"],
                     "stck_prdy_clpr": raw["stck_prdy_clpr"],
                 }
-                # 4) INSERT / UPDATE
+
                 insert_price_snapshot(conn, snapshot)
                 print(
                     f"[{ticker} {kor_name}] "
@@ -48,9 +67,13 @@ def run():
                     f"누적거래량={snapshot['acml_vol']} "
                     f"전일종가={snapshot['stck_prdy_clpr']}"
                 )
+
             except Exception as e:
+                # 한 종목에서 실패해도 다음 종목은 시도
                 print(f"[ERROR] ticker={ticker} ({kor_name}) 처리 중 오류: {e}")
+
             time.sleep(0.4)
+
         conn.commit()
     finally:
         conn.close()
@@ -61,8 +84,8 @@ def main():
 
     conn = get_connection()
     try:
-        # 새 스키마 테이블 생성 (Stocks)
         ensure_price_table(conn)
+        print("테이블 준비 완료: Stocks")
     finally:
         conn.close()
 
