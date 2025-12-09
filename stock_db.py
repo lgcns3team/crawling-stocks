@@ -1,4 +1,3 @@
-# stock_db.py
 import pymysql
 from stock_config import (
     DB_HOST,
@@ -55,7 +54,7 @@ def ensure_price_table(conn):
     with conn.cursor() as cur:
         cur.execute(create_price_table_sql)
     conn.commit()
-    print(f"✅ 테이블 준비 완료: {PRICE_TABLE_NAME}")
+    print(f"테이블 준비 완료: {PRICE_TABLE_NAME}")
 
 
 def get_or_create_company(conn, ticker: str, name: str | None = None) -> str:
