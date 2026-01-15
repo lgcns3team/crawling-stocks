@@ -33,14 +33,18 @@ def run():
                 except Exception as e:
                     msg = str(e)
                     # 토큰 문제로 보이는 경우에만 재발급 로직 태움
-                    if "status=401" in msg or "status=403" in msg or "접근토큰" in msg:
+                    token_error_signs = [
+                        "status=401",
+                        "status=403",
+                        "접근토큰",
+                        "기간이 만료된 token",  
+                        "기간이 만료된",        
+                    ]
+                    if any(s in msg for s in token_error_signs):
                         print(f"[WARN] {ticker} {kor_name} 조회 중 토큰 문제 추정 → 재발급 시도")
-                        # 2-1) 강제 재발급 (1분 이내면 기존 토큰 재사용)
                         access_token = get_access_token(force_new=True)
-                        # 2-2) 새 토큰으로 한 번 더 시도
                         raw = fetch_price_snapshot(ticker, access_token)
                     else:
-                        # 토큰 문제가 아니면 여기서 바로 raise 해서 아래 except로
                         raise
 
                 # 여기까지 왔으면 raw는 정상
